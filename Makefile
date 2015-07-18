@@ -5,7 +5,9 @@
 CC= gcc 
 CFLAGS= -std=c99 -g -Werror -Wall
 
-all: tst
+include LaTeX.mk
+
+all: tst main.pdf
 
 tst: tst.c options.c
 
@@ -20,6 +22,6 @@ test-options:
 	./a.out -bb arg-bb -cc arg-cc /etc/passwd
 	./a.out -bb arg-bb -cc arg-cc /etc/passwd /etc/group
 
-clean:
+clean::
 	rm -f tst a.out *.o
 
