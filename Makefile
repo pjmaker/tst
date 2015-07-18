@@ -17,6 +17,10 @@ tst.cat: tst.1
 
 options.o: options.h
 
+test-split:
+	gcc -DTEST tst-split.c
+	./a.out
+
 test-options:
 	gcc -DTEST options.c
 	./a.out
