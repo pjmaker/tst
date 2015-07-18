@@ -181,6 +181,9 @@ tms option_time(char* opt, char* dflt, char* descr) {
   return parse_t(option(opt, dflt, descr));
 }
 
+tms option_period(char* opt, char* dflt, char* descr) {
+  return parse_period(option(opt, dflt, descr));
+}
 
 #ifdef TEST
 

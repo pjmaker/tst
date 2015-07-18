@@ -43,12 +43,14 @@ typedef long tms; // time in milliseconds since epoch
 #define ISTIME(v) ((v) != NOTIME) // 
 
 tms parse_t(char* s);
+tms parse_period(char* s);
 tms parse_tf(char* s, char* fmt[]);
 
 char* fmt_t(tms);
 
 bool parse_t_header(char* s, bool* delta, tms* size);
 char* unparse_t_header(bool delta, tms size);
+
 
 void print_tm(struct tm* tmp);
 void print_iso8601(struct tm* tmp);

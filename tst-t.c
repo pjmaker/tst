@@ -97,7 +97,7 @@ tms parse_t(char* s) {
 }
 
 // parse timestamp s against fmt[0..] and return either
-// the time as a double or NOTIME
+// the time as a tms or NOTIME
 tms parse_tf(char* s, char* fmt[]) {
   char* skip_ws(char*);
   char* parse_subsec(char*);
@@ -193,6 +193,39 @@ char* skip_ws(char* s) {
   return s;
 }
 
+// parse a change
+tms parse_period(char* p) {
+  errno = 0;
+  char *old_p = p;
+  tms n = strtol(p, &p, 10);
+  if(old_p == p) { // no digits 
+    n = 1;
+  } else if(errno != 0) { // default to 1s
+    n = 1; 
+  } else {
+    // we got it into n so keep going
+  }
+
+  p = skip_ws(p);
+  if(*p == '\0') { // default to seconds
+    n *= 1000; 
+  } else if(strncmp("ms", p, 2) == 0) {
+    // leave n as is
+  } else if(strncmp("s", p, 1) == 0) {
+    n *= 1000;
+  } else if(strncmp("m", p, 1) == 0) {
+    n *= 60 * 1000;
+  } else if(strncmp("h", p, 1) == 0) {
+    n *= 60 * 60 * 1000;
+  } else if(strncmp("d", p, 1) == 0) {
+    n *= 24 * 60 * 60 * 1000;
+  } else {
+    fprintf(stderr, "parse_period failed for %s\n", old_p);
+    exit(203);
+  }
+  return n;
+}
+
 // parse the time header which looks like:
 // [d]t[NNNN|][s|ms|m|h|d]
 bool parse_t_header(char* s, bool* delta, tms* tsize) {
@@ -214,33 +247,8 @@ bool parse_t_header(char* s, bool* delta, tms* tsize) {
   if(*p == '\0') {
     return true;
   }
-  errno = 0;
-  char *old_p = p;
-  tms n = strtol(p, &p, 10);
-  if(old_p == p) { // no digits 
-    n = 1;
-  } else if(errno != 0) { // default to 1s
-    n = 1; 
-  } else {
-    // we got it into n so keep going
-  }
-
-  p = skip_ws(p);
-  printf("@ %c %ld\n", *p, n);
-  if(*p == '\0') { // default to seconds
-    n *= 1000; 
-  } else if(strncmp("ms", p, 2) == 0) {
-    // leave n as is
-  } else if(strncmp("s", p, 1) == 0) {
-    n *= 1000;
-  } else if(strncmp("m", p, 1) == 0) {
-    n *= 60 * 1000;
-  } else if(strncmp("h", p, 1) == 0) {
-    n *= 60 * 60 * 1000;
-  } else {
-    return false;
-  }
-  *tsize = n;
+  
+  *tsize = parse_period(p);
   return true;
 }
 
@@ -252,7 +260,10 @@ char* unparse_t_header(bool delta, tms t) {
   } 
   tms tv;
   char* u;
-  if(t >= (3600 * 1000) && (t % (3600 * 1000)) == 0) { // h
+  if(t >= (24 * 3600 * 1000) && (t % (24 * 3600 * 1000)) == 0) { // h
+    tv = t / (24 * 3600 * 1000);
+    u = "h";
+  } else if(t >= (3600 * 1000) && (t % (3600 * 1000)) == 0) { // h
     tv = t / (3600 * 1000);
     u = "h";
   } else if(t >= 60 * 1000 && (t % (60 * 1000)) == 0) { // m

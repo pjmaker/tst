@@ -47,6 +47,7 @@ double option_double(char *opt, char* dflt, char* descr);
 long option_long(char *opt, char* dflt, char* descr);
 bool option_t(char* opt, bool *dp, tms *dt, char* descr);
 tms  option_time(char *opt,  char* dflt, char* descr);
+tms option_period(char* opt, char *dflt, char* descr);
 
 #endif 
 

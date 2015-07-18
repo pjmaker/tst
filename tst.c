@@ -78,7 +78,7 @@ int main(int argc, char** argv) {
   show_parsed_t = option_bool("-show_parsed_t", "0", "What is it?");
   show_parsed_v = option_bool("-show_parsed_v", "0", "What is it?");
 
-  every = option_long("-every", "0", "What is it?");
+  every = option_period("-every", "0", "What is it?");
   if(!option_t("-t", &write_delta, &write_tsize, "What is it?")) {
     write_delta = false;
     write_tsize = 1;
