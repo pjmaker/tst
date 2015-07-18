@@ -64,22 +64,22 @@ int main(int argc, char** argv) {
   // show_options();
 
   // grab all the options
-  meta_add = option_bool("-meta_add", "0");
-  meta_strip = option_bool("-meta_strip", "1"); 
-  dv = option_double("-dv", "0");
-  zdb = option_double("-zdb", "0");
-  st = option_time("-st", "1970-1-1");
-  et = option_time("-et", "3000-1-1");
-  vfmt = option("-vfmt", "%g");  
-  sep = option("-sep", ",");
-  recsep = option("-recsep", "\n");
+  meta_add = option_bool("-meta_add", "0", "What is it?");
+  meta_strip = option_bool("-meta_strip", "1", "What is it?"); 
+  dv = option_double("-dv", "0", "What is it?");
+  zdb = option_double("-zdb", "0", "What is it?");
+  st = option_time("-st", "1970-1-1", "What is it?");
+  et = option_time("-et", "3000-1-1", "What is it?");
+  vfmt = option("-vfmt", "%g", "What is it?");  
+  sep = option("-sep", ",", "What is it?");
+  recsep = option("-recsep", "\n", "What is it?");
 
-  show_input = option_bool("-show_input", "0");
-  show_parsed_t = option_bool("-show_parsed_t", "0");
-  show_parsed_v = option_bool("-show_parsed_v", "0");
+  show_input = option_bool("-show_input", "0", "What is it?");
+  show_parsed_t = option_bool("-show_parsed_t", "0", "What is it?");
+  show_parsed_v = option_bool("-show_parsed_v", "0", "What is it?");
 
-  every = option_long("-every", "0");
-  if(!option_t("-t", &write_delta, &write_tsize)) {
+  every = option_long("-every", "0", "What is it?");
+  if(!option_t("-t", &write_delta, &write_tsize, "What is it?")) {
     write_delta = false;
     write_tsize = 1000;
   } 

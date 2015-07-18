@@ -29,8 +29,8 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _TS_OPTIONS_H_
-#define _TS_OPTIONS_H_ 1
+#ifndef _OPTIONS_H_
+#define _OPTIONS_H_ 1
 
 #include <stdbool.h>
 #include "tst-t.h"
@@ -38,15 +38,15 @@
 void init_options(int argc, char* argv[]);
 void show_options();
 
-char* option(char *opt, char* dflt);
+char* option(char *opt, char* dflt, char* descr);
 char* get_filename(int i);
 char* get_progname();
 
-bool option_bool(char *opt, char* dflt);
-double option_double(char *opt, char* dflt);
-long option_long(char *opt, char* dflt);
-bool option_t(char* opt, bool *dp, tms *dt);
-tms  option_time(char *opt,  char* dflt);
+bool option_bool(char *opt, char* dflt, char* descr);
+double option_double(char *opt, char* dflt, char* descr);
+long option_long(char *opt, char* dflt, char* descr);
+bool option_t(char* opt, bool *dp, tms *dt, char* descr);
+tms  option_time(char *opt,  char* dflt, char* descr);
 
 #endif 
 

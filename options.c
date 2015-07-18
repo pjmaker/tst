@@ -118,11 +118,20 @@ char* get_filename(int i) {
   }
 }
 
+char* bs_nl(char *s) {
+  if(*s == '\n') {
+    return "\\n";
+  } else {
+    return s;
+  }
+}
+
 // show all options on stdout
 void show_options() {
   int i;
   for(i = 0; i < noptions; i++) {
-    printf("# option[%d] = %s %s\n", i, get_opt(i), get_val(i));
+    printf("# option[%d] = %s %s\n", i, get_opt(i), 
+	   bs_nl(get_val(i)));
   }
   for(i = 0; i < nfiles; i++) {
     printf("# file[%d] = %s\n", i, files[i]);
@@ -131,43 +140,45 @@ void show_options() {
 
 // get value for option opt defaulting to dflt if
 // its not given.
-char* option(char* opt, char* dflt) {
+char* option(char* opt, char* dflt, char* descr) {
   int i;
   for(i = 0; i < noptions; i++) {
     if(strcmp(opt, get_opt(i)) == 0) { // match
+      printf("# %s %s -- %s\n", opt, bs_nl(get_val(i)), descr);
       return get_val(i);
     }
   }
+  printf("# %s %s -- %s\n", opt, bs_nl(dflt), descr);
   return dflt;
 }
 
 // return bool option
-bool option_bool(char* opt, char* dflt) {
-  char* s = option(opt,dflt);
+bool option_bool(char* opt, char* dflt, char* descr) {
+  char* s = option(opt, dflt, descr);
   // we could add in plain text options for booleans
   return atoi(s) != 0;
 }
 
 // return double option
-double option_double(char* opt, char* dflt) {
-  return atof(option(opt,dflt));
+double option_double(char* opt, char* dflt, char* descr) {
+  return atof(option(opt, dflt, descr));
 }
 
 // return long option
-long option_long(char* opt, char* dflt) {
-  return atol(option(opt,dflt));
+long option_long(char* opt, char* dflt, char* descr) {
+  return atol(option(opt, dflt, descr));
 }
 
-bool option_t(char* opt, bool* tdelta, tms* tsize) {
-  if(parse_t_header(option(opt, ""), tdelta, tsize)) {
+bool option_t(char* opt, bool* tdelta, tms* tsize, char* descr) {
+  if(parse_t_header(option(opt, "", descr), tdelta, tsize)) {
     return true;
   } else { 
     return false;
   }
 }
 
-tms option_time(char* opt, char* dflt) {
-  return parse_t(option(opt,dflt));
+tms option_time(char* opt, char* dflt, char* descr) {
+  return parse_t(option(opt, dflt, descr));
 }
 
 
