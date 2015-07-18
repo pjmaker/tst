@@ -81,7 +81,7 @@ int main(int argc, char** argv) {
   every = option_long("-every", "0", "What is it?");
   if(!option_t("-t", &write_delta, &write_tsize, "What is it?")) {
     write_delta = false;
-    write_tsize = 1000;
+    write_tsize = 1;
   } 
 
   // add the command line
@@ -224,37 +224,48 @@ void write_header() {
 
 tms every; // every t ms show a sample if not 0
 
-
 void write_output1(tms t, double v);
+void write_every(tms t, double v);
+
 static tms ot = 0;
 static double ov = 0;
-static bool first = true;
-static tms everyt = 0;
 
 // write_output t v - 
 void write_output(tms t, double v) {
   if(every == 0) { // not resampling the data
     write_output1(t, v); // so send it straight off
-  } else if(first) { // no output on first sample
-    everyt = (t / every) * every;
-    first = false;
-  } else { // second or third .. sample
-    while(everyt < t) {
-      write_output1(everyt, ov);
-      everyt += every;
-    }
-    if(everyt == t) {
-      write_output1(t, v);
-    } else if(everyt > t) {
-      // keep it around for the next cycle
-    } else { 
-      // everyt < t impossible
-      assert(0);
-    }
+  } else {
+    write_every(t, v);
   }
   ot = t;
   ov = v;
 }
+
+tms next_every(tms t) {
+  return ((t / every) + 1) * every;
+}
+
+static bool first = true;
+
+// write_every every ms t,v so
+// collect samples until the last one before 
+// a value that rounds 
+void write_every(tms t, double v) { 
+  if(first) {
+    if((t % every) == 0) {
+      write_output1(t,v);
+    }
+    first = false;
+  } else {
+    while((ot = next_every(ot)) < t) {
+      write_output1(ot, ov);
+    }
+    if(ot == t) {
+      write_output1(t, v);
+    }
+  }
+}
+
 
 double zdb = 0;
 double dv = 0;
@@ -291,7 +302,7 @@ void write_output1(tms t, double v) {
 	tv =  t / write_tsize;
       }
       tb = t;
-      printf("%ld", tv);
+      printf("%s", fmt_t(tv));
       printf("%s", sep);
       printf(vfmt, v);
       printf("%s", recsep);
@@ -306,6 +317,7 @@ static void process(char* filename) {
     printf("# process %s\n", filename);
   }
   open_filename(filename);
+  setlinebuf(stdout);
   read_input();
 }
 
