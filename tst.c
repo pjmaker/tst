@@ -96,6 +96,10 @@ static void open_filename(char* filename) {
   }
 }
 
+// get line from infp stripping out 
+//  meta_data if -meta_strip
+//  empty lines
+//  finally trim the trailing \n 
 static char line[1024];
 
 static char* getline() {
@@ -105,7 +109,10 @@ static char* getline() {
     } else {
       if(meta_strip && line[0] == '#') {
 	// strip out meta_data from input
-      } else {
+      } else if(line[0] == '\n') { 
+	// strip out empty lines
+      } else { // got it, just remove \n
+	line[strlen(line)-1] = '\0';
 	return line;
       }
     }
@@ -118,9 +125,13 @@ static void process(char* filename) {
   }
   open_filename(filename);
   while(getline() != NULL) { 
-    printf("%s", line);
     int nf = split_csv(line);
-    printf("nf = %d\n", nf);
-    print_fields();
+    if(nf != 2) {
+      fprintf(stderr, "%s: %s does not contain two fields\n", 
+	      get_progname(),
+	      line);
+      exit(201);
+    }
+    printf("%s @ %s\n", field(0), field(1));
   }
 }
