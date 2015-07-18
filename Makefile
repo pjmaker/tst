@@ -10,7 +10,7 @@ all: tst main.pdf tst.cat
 include LaTeX.mk
 
 
-tst: tst.c options.c
+tst: tst.o options.o tst-split.o
 
 tst.cat: tst.1
 	nroff -man tst.1 >tst.cat
