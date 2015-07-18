@@ -7,9 +7,12 @@ CFLAGS= -std=c99 -g -Werror -Wall
 
 include LaTeX.mk
 
-all: tst main.pdf
+all: tst main.pdf tst.cat
 
 tst: tst.c options.c
+
+tst.cat: tst.1
+	nroff -man tst.1 >tst.cat
 
 options.o: options.h
 
