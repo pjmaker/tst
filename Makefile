@@ -3,19 +3,21 @@
 #
 
 CC= gcc 
-CFLAGS= -std=c99 -g -Werror -Wall
+CFLAGS= -std=gnu99 -g -Werror -Wall
 
 all: tst main.pdf tst.cat
 
 include LaTeX.mk
 
 
-tst: tst.o options.o tst-split.o
+tst: tst.o options.o tst-split.o tst-t.o
 
 tst.cat: tst.1
 	nroff -man tst.1 >tst.cat
 
 options.o: options.h
+
+tst-t.o: tst-t.h
 
 test-split:
 	gcc -DTEST tst-split.c
