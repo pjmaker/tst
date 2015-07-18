@@ -36,10 +36,12 @@
 #include <errno.h>
 
 #include "options.h"
+#include "tst-split.h"
 
 // global options which are settable via
 // command line
 bool   meta_add = false;
+bool   meta_strip;
 double dv;
 double zdb;
 
@@ -47,10 +49,11 @@ static void process(char* filename); // process an input file
 
 int main(int argc, char** argv) {
   init_options(argc, argv);
-  show_options();
+  // show_options();
 
   // grab all the options
-  meta_add = option_bool("-meta_add", "1");
+  meta_add = option_bool("-meta_add", "0");
+  meta_strip = option_bool("-meta_strip", "1"); 
   dv = option_double("-dv", "0");
   zdb = option_double("-zdb", "0");
 
@@ -96,17 +99,28 @@ static void open_filename(char* filename) {
 static char line[1024];
 
 static char* getline() {
-  if(fgets(line, sizeof(line), infp) == NULL) {
-    return NULL;
-  } else {
-    return line;
+  for(;;) {
+    if(fgets(line, sizeof(line), infp) == NULL) {
+      return NULL;
+    } else {
+      if(meta_strip && line[0] == '#') {
+	// strip out meta_data from input
+      } else {
+	return line;
+      }
+    }
   }
 }
 
 static void process(char* filename) {
-  printf("# process %s\n", filename);
+  if(meta_add) {
+    printf("# process %s\n", filename);
+  }
   open_filename(filename);
   while(getline() != NULL) { 
     printf("%s", line);
+    int nf = split_csv(line);
+    printf("nf = %d\n", nf);
+    print_fields();
   }
 }
