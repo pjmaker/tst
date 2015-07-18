@@ -43,7 +43,6 @@
 // command line
 bool   meta_add = false;
 bool   meta_strip;
-bool   input_show;
 double dv;
 double zdb;
 tms st;
@@ -53,7 +52,7 @@ char* sep;
 char* recsep;
 bool show_parsed_t;
 bool show_parsed_v;
-bool show_input; // duplicate ttt
+bool show_input; 
 tms every;
 bool write_delta;
 tms write_tsize;
@@ -67,7 +66,6 @@ int main(int argc, char** argv) {
   // grab all the options
   meta_add = option_bool("-meta_add", "0");
   meta_strip = option_bool("-meta_strip", "1"); 
-  input_show = option_bool("-input_show", "0");
   dv = option_double("-dv", "0");
   zdb = option_double("-zdb", "0");
   st = option_time("-st", "1970-1-1");
@@ -136,7 +134,7 @@ static char* readline() {
     if(fgets(line, sizeof(line), infp) == NULL) {
       return NULL;
     } else {
-      if(input_show) {
+      if(show_input) {
 	printf("# line %s", line);
       }
       if(meta_strip && line[0] == '#') {
