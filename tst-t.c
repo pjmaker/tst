@@ -329,6 +329,19 @@ void print_iso8601(struct tm* tmp) {
   printf("%s", fmt_iso8601(tmp));
 }
 
+#ifdef TEST
+int main() {
+  char line[80];
+  while(fgets(line, sizeof(line), stdin) != NULL) {
+    line[strlen(line)-1] = '\0';
+    tms t = parse_t(line);
+    printf("%s -> %ld ms -> %s\n",
+	   line,
+	   t,
+	   fmt_t(t));
+  }
+}
+#endif
 
 
 

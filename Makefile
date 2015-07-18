@@ -23,6 +23,10 @@ test-split:
 	gcc -DTEST tst-split.c
 	./a.out
 
+test-t:
+	gcc -DTEST tst-t.c
+	./a.out <test.dates
+
 test-options:
 	gcc -DTEST options.c
 	./a.out
