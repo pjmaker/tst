@@ -33,7 +33,7 @@
 #define _TS_OPTIONS_H_ 1
 
 #include <stdbool.h>
-// #include "ts-t.h"
+#include "tst-t.h"
 
 void init_options(int argc, char* argv[]);
 void show_options();
@@ -45,8 +45,8 @@ char* get_progname();
 bool option_bool(char *opt, char* dflt);
 double option_double(char *opt, char* dflt);
 long option_long(char *opt, char* dflt);
-// bool option_t(char* opt, bool *dp, tms *dt);
-// tms  option_time(char *opt,  char* dflt);
+bool option_t(char* opt, bool *dp, tms *dt);
+tms  option_time(char *opt,  char* dflt);
 
 #endif 
 

@@ -158,7 +158,6 @@ long option_long(char* opt, char* dflt) {
   return atol(option(opt,dflt));
 }
 
-#if 0 // disabled till we add this one back in
 bool option_t(char* opt, bool* tdelta, tms* tsize) {
   if(parse_t_header(option(opt, ""), tdelta, tsize)) {
     return true;
@@ -167,12 +166,10 @@ bool option_t(char* opt, bool* tdelta, tms* tsize) {
   }
 }
 
-#if 0
 tms option_time(char* opt, char* dflt) {
   return parse_t(option(opt,dflt));
 }
-#endif
-#endif
+
 
 #ifdef TEST
 
