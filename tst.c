@@ -46,6 +46,17 @@ bool   meta_strip;
 bool   input_show;
 double dv;
 double zdb;
+tms st;
+tms et;
+char* vfmt;
+char* sep;
+char* recsep;
+bool show_parsed_t;
+bool show_parsed_v;
+bool show_input; // duplicate ttt
+tms every;
+bool write_delta;
+tms write_tsize;
 
 static void process(char* filename); // process an input file
 
@@ -59,6 +70,21 @@ int main(int argc, char** argv) {
   input_show = option_bool("-input_show", "0");
   dv = option_double("-dv", "0");
   zdb = option_double("-zdb", "0");
+  st = option_time("-st", "1970-1-1");
+  et = option_time("-et", "3000-1-1");
+  vfmt = option("-vfmt", "%g");  
+  sep = option("-sep", ",");
+  recsep = option("-recsep", "\n");
+
+  show_input = option_bool("-show_input", "0");
+  show_parsed_t = option_bool("-show_parsed_t", "0");
+  show_parsed_v = option_bool("-show_parsed_v", "0");
+
+  every = option_long("-every", "0");
+  if(!option_t("-t", &write_delta, &write_tsize)) {
+    write_delta = false;
+    write_tsize = 1000;
+  } 
 
   // add the command line
   if(meta_add) {
@@ -150,29 +176,6 @@ void read_header() {
   }
 }
 
-static void process(char* filename) {
-  if(meta_add) {
-    printf("# process %s\n", filename);
-  }
-  open_filename(filename);
-  read_header();
-  printf("# tlabel = %s\n", tlabel);
-  printf("# vlabel = %s\n", vlabel);
-  while(readline() != NULL) { 
-    int nf = split_csv(line);
-    if(nf != 2) {
-      fprintf(stderr, "%s: %s does not contain two fields\n", 
-	      get_progname(),
-	      line);
-      exit(201);
-    }
-    printf("%s @ %s\n", field(0), field(1));
-  }
-}
-
-#if 0 // old code
-
-
 void write_output(tms t, double v);
 void write_header();
 
@@ -182,7 +185,7 @@ bool show_parsed_v;
 void read_input() { 
   read_header();
   write_header();
-  while(read_line()) { 
+  while(readline()) { 
     if(split_csv(line) != 2) {
       fprintf(stderr, "wrong number of fields\n");
       exit(90);
@@ -209,9 +212,9 @@ void read_input() {
 
 tms st; // start time for output
 tms et; // end time for output
-const char* vfmt; // format for printing a variable
-const char* sep; // separator between fields
-const char* recsep; // record separator
+char* vfmt; // format for printing a variable
+char* sep; // separator between fields
+char* recsep; // record separator
 tms write_tsize; // step size for t in ms
 bool write_delta; // delta encoded time
 
@@ -300,26 +303,12 @@ void write_output1(tms t, double v) {
   }
 }
 
-int main(int argc, char** argv) { 
-  init_options(argc, argv);
-
-  st = option_time("-st", "1970-1-1");
-  et = option_time("-et", "3000-1-1");
-  vfmt = option("-vfmt", "%g");  
-  sep = option("-sep", ",");
-  recsep = option("-recsep", "\n");
-
-  show_input = option_bool("-show_input", "0");
-  show_parsed_t = option_bool("-show_parsed_t", "0");
-  show_parsed_v = option_bool("-show_parsed_v", "0");
-
-  every = option_long("-every", "0");
-  if(!option_t("-t", &write_delta, &write_tsize)) {
-    write_delta = false;
-    write_tsize = 1000;
-  } 
+static void process(char* filename) {
+  if(meta_add) {
+    printf("# process %s\n", filename);
+  }
+  open_filename(filename);
   read_input();
-  return 0;
 }
 
-#endif
+
