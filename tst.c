@@ -32,15 +32,81 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
+#include <errno.h>
 
 #include "options.h"
 
+// global options which are settable via
+// command line
+bool   meta_add = false;
+double dv;
+double zdb;
+
+static void process(char* filename); // process an input file
+
 int main(int argc, char** argv) {
   init_options(argc, argv);
-  // show_options();
+  show_options();
 
-  for(int i = 0; get_filename(i) != NULL; i++) {
-    printf("filename %s\n", get_filename(i));
+  // grab all the options
+  meta_add = option_bool("-meta_add", "1");
+  dv = option_double("-dv", "0");
+  zdb = option_double("-zdb", "0");
+
+  // add the command line
+  if(meta_add) {
+    printf("# %%");
+    for(int i = 0; i < argc; i++) {
+      printf(" %s", argv[i]);
+    }
+    printf("\n");
   }
+
+  // process the files
+  if(get_filename(0) == NULL) {
+    process("-");
+  } else {
+    for(int i = 0; get_filename(i) != NULL; i++) {
+      process(get_filename(i));
+    }
+  }
+
   return 0;
+}
+
+// open infp using filename or stdin if its "-"
+static FILE* infp;
+
+static void open_filename(char* filename) {
+  if(strcmp(filename,"-") == 0) {
+    infp = stdin;
+  } else {
+    errno = 0;
+    if((infp = fopen(filename, "r")) == NULL) {
+      fprintf(stderr, "%s: fatal error cannot open file \"%s\": %s\n", 
+	      get_progname(), 
+	      filename,
+	      strerror(errno));
+      exit(103);
+    }
+  }
+}
+
+static char line[1024];
+
+static char* getline() {
+  if(fgets(line, sizeof(line), infp) == NULL) {
+    return NULL;
+  } else {
+    return line;
+  }
+}
+
+static void process(char* filename) {
+  printf("# process %s\n", filename);
+  open_filename(filename);
+  while(getline() != NULL) { 
+    printf("%s", line);
+  }
 }
