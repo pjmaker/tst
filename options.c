@@ -37,21 +37,26 @@
 
 #include "options.h"
 
-// 
-static char* progname;
+// shared state for option handling - these are 
+// all exported via get_* functions
 
-static int noptions; 
-static char** options;
+static char* progname; // program name argv[0] 
 
-static int nfiles;
-static char** files;
+static int noptions; // number of options (-opt val)
+static char** options; // list of (-opt val)
 
+static int nfiles; // number of filenames
+static char** files; // list of filenames
+
+// initialise options based on argc/argv
 void init_options(int argc, char* argv[]) { 
   int i;
 
+  // save progname away for error messages
   assert(argc >= 1);
   progname = argv[0]; 
 
+  // process -opt val pairs first
   options = &argv[1];
   for(i = 1; i < argc; i++) {
     if(argv[i][0] == '-') { // -option
@@ -68,6 +73,7 @@ void init_options(int argc, char* argv[]) {
     }
   }
 
+  // the rest must be filenames that we can read
   FILE *fp;
   files = &argv[i];
   for(nfiles = 0; i < argc; i++) {
@@ -85,20 +91,25 @@ void init_options(int argc, char* argv[]) {
   }
 }
 
+// returns progname, i.e. argv[0]
 char* get_progname() {
   return progname;
 }
 
+// return option name for slot i, -opt
 static char* get_opt(int i) {
   assert(i < noptions);
   return options[i*2];
 }
 
+// return the value for slot i, arg-a
 static char* get_val(int i) {
   assert(i < noptions);
   return options[(i * 2) + 1];
 }
 
+// return the filename for slot i or
+// NULL if no more files
 char* get_filename(int i) { 
   if(0 <= i && i < nfiles) {
     return files[i];
@@ -107,16 +118,19 @@ char* get_filename(int i) {
   }
 }
 
+// show all options on stdout
 void show_options() {
   int i;
   for(i = 0; i < noptions; i++) {
-    printf("option[%d] = %s %s\n", i, get_opt(i), get_val(i));
+    printf("# option[%d] = %s %s\n", i, get_opt(i), get_val(i));
   }
   for(i = 0; i < nfiles; i++) {
-    printf("file[%d] = %s\n", i, files[i]);
+    printf("# file[%d] = %s\n", i, files[i]);
   }
 }
 
+// get value for option opt defaulting to dflt if
+// its not given.
 char* option(char* opt, char* dflt) {
   int i;
   for(i = 0; i < noptions; i++) {
@@ -127,14 +141,19 @@ char* option(char* opt, char* dflt) {
   return dflt;
 }
 
+// return bool option
 bool option_bool(char* opt, char* dflt) {
-  return atoi(option(opt,dflt)) != 0;
+  char* s = option(opt,dflt);
+  // we could add in plain text options for booleans
+  return atoi(s) != 0;
 }
 
+// return double option
 double option_double(char* opt, char* dflt) {
   return atof(option(opt,dflt));
 }
 
+// return long option
 long option_long(char* opt, char* dflt) {
   return atol(option(opt,dflt));
 }
