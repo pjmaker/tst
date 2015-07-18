@@ -1,5 +1,5 @@
 /*
- * tst.c
+ * tst.c - the time series transmogrifier
  *
  * Copyright (c) 2015, Phil Maker
  * All rights reserved.
@@ -37,11 +37,13 @@
 
 #include "options.h"
 #include "tst-split.h"
+#include "tst-t.h"
 
 // global options which are settable via
 // command line
 bool   meta_add = false;
 bool   meta_strip;
+bool   input_show;
 double dv;
 double zdb;
 
@@ -54,6 +56,7 @@ int main(int argc, char** argv) {
   // grab all the options
   meta_add = option_bool("-meta_add", "0");
   meta_strip = option_bool("-meta_strip", "1"); 
+  input_show = option_bool("-input_show", "0");
   dv = option_double("-dv", "0");
   zdb = option_double("-zdb", "0");
 
@@ -96,17 +99,20 @@ static void open_filename(char* filename) {
   }
 }
 
-// get line from infp stripping out 
+// read line from infp stripping out 
 //  meta_data if -meta_strip
 //  empty lines
 //  finally trim the trailing \n 
 static char line[1024];
 
-static char* getline() {
+static char* readline() {
   for(;;) {
     if(fgets(line, sizeof(line), infp) == NULL) {
       return NULL;
     } else {
+      if(input_show) {
+	printf("# line %s", line);
+      }
       if(meta_strip && line[0] == '#') {
 	// strip out meta_data from input
       } else if(line[0] == '\n') { 
@@ -118,13 +124,41 @@ static char* getline() {
     }
   }
 }
+
+// read the header line
+
+static char* tlabel;
+static char* vlabel;
+static bool  read_delta;
+static tms   read_tsize;
+
+void read_header() { 
+  if(readline()) { 
+    if(split_csv(line) != 2) { 
+      fprintf(stderr, "oops must have two fields in header\n");
+      exit(99);
+    }
+    tlabel = strdup(field(0));
+    if(!parse_t_header(tlabel, &read_delta, &read_tsize)) {
+      fprintf(stderr, "failed to parse tlabel %s\n", tlabel);
+      exit(100);
+    }
+    vlabel = strdup(field(1));
+  } else {
+    fprintf(stderr, "oops: no header\n");
+    exit(11);
+  }
+}
 
 static void process(char* filename) {
   if(meta_add) {
     printf("# process %s\n", filename);
   }
   open_filename(filename);
-  while(getline() != NULL) { 
+  read_header();
+  printf("# tlabel = %s\n", tlabel);
+  printf("# vlabel = %s\n", vlabel);
+  while(readline() != NULL) { 
     int nf = split_csv(line);
     if(nf != 2) {
       fprintf(stderr, "%s: %s does not contain two fields\n", 
@@ -135,3 +169,157 @@ static void process(char* filename) {
     printf("%s @ %s\n", field(0), field(1));
   }
 }
+
+#if 0 // old code
+
+
+void write_output(tms t, double v);
+void write_header();
+
+bool show_parsed_t;
+bool show_parsed_v;
+ 
+void read_input() { 
+  read_header();
+  write_header();
+  while(read_line()) { 
+    if(split_csv(line) != 2) {
+      fprintf(stderr, "wrong number of fields\n");
+      exit(90);
+    }
+
+    tms t = parse_t(field(0)) * read_tsize;
+    if(read_delta) {
+      static tms old_t = 0;
+      t = t + old_t;
+    }
+    double v = strtod(field(1), NULL);
+    
+    if(show_parsed_t) {
+      printf("* t = %ld = ", t);
+      print_t(t);
+      printf("\n");
+    }
+    if(show_parsed_v) { 
+      printf("* v = %g\n", v);
+    }
+    write_output(t, v);
+  }
+}
+
+tms st; // start time for output
+tms et; // end time for output
+const char* vfmt; // format for printing a variable
+const char* sep; // separator between fields
+const char* recsep; // record separator
+tms write_tsize; // step size for t in ms
+bool write_delta; // delta encoded time
+
+void write_header() {
+  printf("%s,%s\n", 
+	 unparse_t_header(write_delta, write_tsize), 
+	 vlabel);
+}
+
+tms every; // every t ms show a sample if not 0
+
+
+void write_output1(tms t, double v);
+static tms ot = 0;
+static double ov = 0;
+static bool first = true;
+static tms everyt = 0;
+
+// write_output t v - 
+void write_output(tms t, double v) {
+  if(every == 0) { // not resampling the data
+    write_output1(t, v); // so send it straight off
+  } else if(first) { // no output on first sample
+    everyt = (t / every) * every;
+    first = false;
+  } else { // second or third .. sample
+    while(everyt < t) {
+      write_output1(everyt, ov);
+      everyt += every;
+    }
+    if(everyt == t) {
+      write_output1(t, v);
+    } else if(everyt > t) {
+      // keep it around for the next cycle
+    } else { 
+      // everyt < t impossible
+      assert(0);
+    }
+  }
+  ot = t;
+  ov = v;
+}
+
+double zdb = 0;
+double dv = 0;
+
+bool v_changed(double v) {
+  static double ov; 
+  static bool first = true; // first 
+  if(first) {
+    first = false;
+    ov = v;
+    return true;
+  }
+
+  if(-zdb < v && v < zdb) { // treat it 0 since its in zdb
+    v = 0;
+  }
+  double d = v - ov; // the change in value 
+  if(-dv < d && d < dv) { // less than dv so ignore it
+    return false;
+  } else {
+    ov = v;
+    return true;
+  }
+}
+
+void write_output1(tms t, double v) {
+  if(st <= t && t <= et) {
+    static tms tb = 0;
+    tms tv;
+    if(v_changed(v)) { 
+      if(write_delta) { 
+	tv = (t - tb) / write_tsize;
+      } else {
+	tv =  t / write_tsize;
+      }
+      tb = t;
+      printf("%ld", tv);
+      printf("%s", sep);
+      printf(vfmt, v);
+      printf("%s", recsep);
+    }
+  } else { 
+    // outside the -st..-et range
+  }
+}
+
+int main(int argc, char** argv) { 
+  init_options(argc, argv);
+
+  st = option_time("-st", "1970-1-1");
+  et = option_time("-et", "3000-1-1");
+  vfmt = option("-vfmt", "%g");  
+  sep = option("-sep", ",");
+  recsep = option("-recsep", "\n");
+
+  show_input = option_bool("-show_input", "0");
+  show_parsed_t = option_bool("-show_parsed_t", "0");
+  show_parsed_v = option_bool("-show_parsed_v", "0");
+
+  every = option_long("-every", "0");
+  if(!option_t("-t", &write_delta, &write_tsize)) {
+    write_delta = false;
+    write_tsize = 1000;
+  } 
+  read_input();
+  return 0;
+}
+
+#endif
