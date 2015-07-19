@@ -12,7 +12,10 @@ include LaTeX.mk
 
 tst: tst.o options.o tst-split.o tst-t.o
 
-tst.cat: tst.1
+tst.cat: tst.1 tst
+	./tst -help 1 | \
+	  sed -e 's/^# //' -e 's/\\/\\\\/g' | \
+	  sort >tst.so
 	nroff -man tst.1 >tst.cat
 
 options.o: options.h
