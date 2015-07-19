@@ -41,6 +41,7 @@
 
 // global options which are settable via
 // command line
+bool   help;
 bool   meta_add = false;
 bool   meta_strip;
 double dv;
@@ -63,6 +64,7 @@ int main(int argc, char** argv) {
   // show_options();
 
   // grab all the options
+  help = option_bool("-help", "1", "What is it?");
   meta_add = option_bool("-meta_add", "0", "What is it?");
   meta_strip = option_bool("-meta_strip", "1", "What is it?"); 
   dv = option_double("-dv", "0", "What is it?");
@@ -82,6 +84,10 @@ int main(int argc, char** argv) {
   topt = option("-t", "iso", 
 	     "iso|10m|%Y/%M/...");
 
+  if(help) { // we've printed the help message so exit
+    exit(0);
+  }
+    
   // add the command line
   if(meta_add) {
     printf("# %%");
