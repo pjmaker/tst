@@ -227,7 +227,9 @@ tms parse_period(char* p) {
 }
 
 // parse the time header which looks like:
-// [d]t[NNNN|][s|ms|m|h|d]
+// [d]t[NNNN|][s|ms|m|h|d] for numeric OR
+// iso for ISO8601 OR
+// %... for a custom format
 bool parse_t_header(char* s, bool* delta, tms* tsize) {
   char *p = s;
   p = skip_ws(p);
@@ -308,6 +310,13 @@ char* fmt_t(tms t) {
     snprintf(r, sizeof(r), "%s%sZ", buf, ssbuf);
     return r;
   }
+}
+
+char* fmt_tg(tms t, char* fmt) {
+  static char buf[1024];
+  time_t tsecs = t/1000;
+  strftime(buf, sizeof(buf), fmt, gmtime(&tsecs));
+  return buf;
 }
 
 void print_t(tms t) { 

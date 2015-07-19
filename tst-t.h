@@ -46,9 +46,13 @@ tms parse_t(char* s);
 tms parse_period(char* s);
 tms parse_tf(char* s, char* fmt[]);
 
-char* fmt_t(tms);
+char* fmt_t(tms t);
+char* fmt_tg(tms t, char* fmt);
 
-bool parse_t_header(char* s, bool* delta, tms* size);
+bool parse_t_header(char* s, 
+		    bool* delta, 
+		    tms* size);
+
 char* unparse_t_header(bool delta, tms size);
 
 

@@ -169,14 +169,6 @@ long option_long(char* opt, char* dflt, char* descr) {
   return atol(option(opt, dflt, descr));
 }
 
-bool option_t(char* opt, bool* tdelta, tms* tsize, char* descr) {
-  if(parse_t_header(option(opt, "", descr), tdelta, tsize)) {
-    return true;
-  } else { 
-    return false;
-  }
-}
-
 tms option_time(char* opt, char* dflt, char* descr) {
   return parse_t(option(opt, dflt, descr));
 }

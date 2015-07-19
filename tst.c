@@ -54,8 +54,7 @@ bool show_parsed_t;
 bool show_parsed_v;
 bool show_input; 
 tms every;
-bool write_delta;
-tms write_tsize;
+char* topt;
 
 static void process(char* filename); // process an input file
 
@@ -79,10 +78,9 @@ int main(int argc, char** argv) {
   show_parsed_v = option_bool("-show_parsed_v", "0", "What is it?");
 
   every = option_period("-every", "0", "What is it?");
-  if(!option_t("-t", &write_delta, &write_tsize, "What is it?")) {
-    write_delta = false;
-    write_tsize = 1;
-  } 
+
+  topt = option("-t", "iso", 
+	     "iso|10m|%Y/%M/...");
 
   // add the command line
   if(meta_add) {
@@ -291,21 +289,32 @@ bool v_changed(double v) {
   }
 }
 
+void write_sample(tms t, double v) {
+  tms tv;
+  static tms tb;
+
+  if(write_delta) { 
+    tv = (t - tb) / write_tsize;
+  } else {
+    tv =  t / write_tsize;
+  }
+  tb = t;
+  if(strcmp(topt, "iso") == 0) { // ttt speed
+    printf("%s", fmt_t(t));
+  } else if(topt[0] == '%') {
+    printf("%s", fmt_tg(t, topt));
+  } else {
+    printf("%ld", tv);
+  }
+  printf("%s", sep);
+  printf(vfmt, v);
+  printf("%s", recsep);
+}
+
 void write_output1(tms t, double v) {
   if(st <= t && t <= et) {
-    static tms tb = 0;
-    tms tv;
     if(v_changed(v)) { 
-      if(write_delta) { 
-	tv = (t - tb) / write_tsize;
-      } else {
-	tv =  t / write_tsize;
-      }
-      tb = t;
-      printf("%s", fmt_t(tv));
-      printf("%s", sep);
-      printf(vfmt, v);
-      printf("%s", recsep);
+      write_sample(t, v);
     }
   } else { 
     // outside the -st..-et range
